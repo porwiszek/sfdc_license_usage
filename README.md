@@ -105,13 +105,6 @@ uv run pytest                              # tests, no org needed
 uv run ruff check . && uv run ruff format .
 ```
 
-`sflic/connect.py`, `sflic/snapshot.py` and the client in `sflic/collect.py` are copied
-from sfgrc 0.1.0, a separate Salesforce security assessment tool by the same author,
-so that sflic stands alone. They are deliberately left unchanged
-apart from the package name: a fix in one project can be carried to the other with a
-diff. The one real difference is `collect()`, which takes a query declaration instead
-of a list of checks.
-
 ## License
 
 MIT. See [LICENSE](LICENSE).
