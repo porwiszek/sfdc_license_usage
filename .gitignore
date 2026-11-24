@@ -1,0 +1,24 @@
+# Client data and secrets: never commit
+snapshots/
+reports/
+settings.yaml
+settings*.yaml
+!settings.example.yaml
+*.token
+.env
+
+# Python / tooling
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+dist/
+build/
+*.egg-info/
+
+.DS_Store
+
+# Local AI assistant instructions
+CLAUDE.md
+.claude/

@@ -1,0 +1,32 @@
+# Copy to settings.yaml (gitignored) and fill in per client.
+client: Example Ltd
+currency: EUR
+
+# A user is dormant after this many days without a login,
+# or when it never logged in and was created more than the grace period ago.
+inactive_days: 90
+never_logged_in_grace_days: 30
+
+# User types that are not people and are never reported as dormant.
+excluded_user_types: [CloudIntegrationUser, AutomatedProcess, Guest, CsnOnly]
+
+# User license names whose users are not people (agents, integration users) and are
+# never reported as dormant. Unlike ignore_licenses, the license itself stays in the report.
+excluded_user_licenses: [Einstein Agent, Analytics Cloud Integration User]
+
+# Usernames to leave out, for example integration users that rarely log in by design.
+excluded_users: []
+
+# License names to leave out of the report (free or bundled licenses).
+# Use the names shown in the report's License column.
+ignore_licenses:
+  - Chatter Free
+
+# Monthly price per seat from the client's contract, keyed by the name shown in the
+# report's License column. A license without a price is still counted; it just has
+# no amount. A price for a name the org does not have is reported as a warning.
+prices:
+  user:
+    Salesforce: 0          # replace 0 with the contract price
+  permission_set: {}
+  package: {}              # keyed by namespace prefix

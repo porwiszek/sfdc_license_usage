@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Salesforce license review · {{ a.settings.client or a.manifest.org.Name or a.manifest.org_id }}</title>
+<style>
+  :root {
+    --ink: #1c2230; --muted: #5d6677; --line: #dfe3ea; --bg: #fbfbfc; --card: #fff; --accent: #1f3a5f;
+    --fail: #b42318; --fail-bg: #fdecea; --pass: #1e7a46; --pass-bg: #e7f5ec;
+    --error: #8a4b00; --error-bg: #fff3e0;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 14px/1.55 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  main { max-width: 1040px; margin: 0 auto; padding: 40px 24px 80px; }
+  header.cover { border-bottom: 3px solid var(--accent); padding-bottom: 18px; margin-bottom: 8px; }
+  .eyebrow { text-transform: uppercase; letter-spacing: .08em; font-size: 12px; color: var(--muted); margin: 0; }
+  h1 { font-size: 28px; margin: 4px 0 2px; }
+  h2 { font-size: 20px; margin: 48px 0 14px; padding-bottom: 6px; border-bottom: 2px solid var(--ink); }
+  h3 { font-size: 16px; margin: 24px 0 8px; }
+  .sub { color: var(--muted); margin: 0; }
+  nav.toc { margin: 18px 0 0; font-size: 13px; }
+  nav.toc a { margin-right: 14px; color: var(--accent); }
+  table { width: 100%; border-collapse: collapse; background: var(--card); }
+  th, td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-size: 12px; text-transform: uppercase; letter-spacing: .03em; color: var(--muted); }
+  td.num, th.num { text-align: right; white-space: nowrap; }
+  tr.total td { font-weight: 600; border-top: 2px solid var(--ink); }
+  .meta td:first-child { color: var(--muted); width: 210px; }
+  .headline { font-size: 17px; font-weight: 600; background: var(--card); border-left: 4px solid var(--accent);
+              padding: 12px 16px; margin: 0 0 18px; }
+  .zero { color: #b8bec9; }
+  .ev { overflow-x: auto; }
+  .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; word-break: break-all; }
+  .warn { background: var(--fail-bg); color: var(--fail); border-radius: 8px; padding: 12px 16px; margin: 16px 0; }
+  .note { background: var(--error-bg); color: var(--error); border-radius: 8px; padding: 12px 16px; margin: 16px 0; }
+  .note ul, .warn ul { margin: 6px 0 0; padding-left: 20px; }
+  .ok { background: var(--pass-bg); color: var(--pass); border-radius: 8px; padding: 10px 16px; margin: 12px 0; }
+  footer { margin-top: 48px; color: var(--muted); font-size: 12px; border-top: 1px solid var(--line); padding-top: 12px; }
+  @media print {
+    body { background: #fff; }
+    nav.toc { display: none; }
+    h2 { break-before: page; }
+    h2.first { break-before: auto; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <header class="cover">
+    <p class="eyebrow">Salesforce license review</p>
+    <h1>{{ a.settings.client or a.manifest.org.Name or a.manifest.org_id }}</h1>
+    <p class="sub">Org {{ a.manifest.org.Name }} ({{ a.manifest.org_id }}) · data collected {{ a.manifest.collected_at }}</p>
+    <nav class="toc">
+      <a href="#summary">Summary</a><a href="#licenses">Licenses</a><a href="#dormant">Dormant users</a><a href="#method">Scope and method</a><a href="#evidence">Evidence appendix</a>
+    </nav>
+  </header>
+
+  <h2 id="summary" class="first">Summary</h2>
+  <p class="headline">{{ headline }}</p>
+  <table>
+    <tr><th>Where</th><th class="num">Seats</th><th class="num">Per year</th><th>What to do</th></tr>
+    <tr>
+      <td>Unassigned seats</td>
+      <td class="num">{{ a.totals.unassigned_seats }}</td>
+      <td class="num">{{ money(a.totals.annual_unassigned) if a.totals.priced_pools else "" }}</td>
+      <td>Bought but given to nobody. Reduce the quantity at the next renewal, or use them before buying more.</td>
+    </tr>
+    <tr>
+      <td>Seats held by dormant users</td>
+      <td class="num">{{ a.totals.dormant_seats }}</td>
+      <td class="num">{{ money(a.totals.annual_dormant) if a.totals.priced_pools else "" }}</td>
+      <td>Confirm with the business, then deactivate the user or remove the license. The seat becomes unassigned.</td>
+    </tr>
+    <tr class="total">
+      <td>Total</td>
+      <td class="num">{{ a.totals.unassigned_seats + a.totals.dormant_seats }}</td>
+      <td class="num">{{ money(a.totals.annual_total) if a.totals.priced_pools else "" }}</td>
+      <td></td>
+    </tr>
+  </table>
+{% if a.totals.priced_pools %}
+  <p class="sub">Amounts use the monthly prices in settings.yaml × 12 and cover priced licenses only. A freed seat saves money when the contract quantity is reduced at renewal, or when it replaces a seat that would otherwise be bought.</p>
+{% else %}
+  <p class="sub">No prices were provided, so the report shows seat counts only.</p>
+{% endif %}
+{% if a.not_collected %}
+  <div class="note"><strong>Not collected.</strong> These parts of the review are missing or incomplete:
+    <ul>
+{% for file, reason in a.not_collected.items() %}
+      <li><span class="mono">{{ file }}</span> ({{ file_use.get(file, "") }}): {{ reason }}</li>
+{% endfor %}
+    </ul>
+  </div>
+{% endif %}
+{% if a.warnings %}
+  <div class="note"><strong>Check settings.yaml.</strong>
+    <ul>
+{% for w in a.warnings %}
+      <li>{{ w }}</li>
+{% endfor %}
+    </ul>
+  </div>
+{% endif %}
+
+  <h2 id="licenses">Licenses</h2>
+{% if not a.pools %}
+  <p>No licenses with a seat count to report.</p>
+{% endif %}
+{% for kind, pools in kinds if pools %}
+  <h3>{{ kind.label }}s ({{ pools|length }})</h3>
+  <div class="ev">
+  <table>
+    <tr><th>License</th><th>Status</th><th class="num">Bought</th><th class="num">Assigned</th><th class="num">Unassigned</th><th class="num">Dormant</th><th class="num">Price / month</th><th class="num">Per year</th></tr>
+{% for p in pools %}
+    <tr>
+      <td>{{ p.name }}{% if p.expires %}<br><span class="sub">expires {{ p.expires|time }}</span>{% endif %}</td>
+      <td>{{ p.status }}</td>
+      <td class="num">{{ p.total }}</td>
+      <td class="num">{{ p.used }}</td>
+      <td class="num">{% if p.unassigned %}{{ p.unassigned }}{% else %}<span class="zero">0</span>{% endif %}</td>
+      <td class="num">{% if p.dormant %}{{ p.dormant }}{% else %}<span class="zero">0</span>{% endif %}</td>
+      <td class="num">{% if p.monthly_price is none %}<span class="zero">no price</span>{% else %}{{ money(p.monthly_price) }}{% endif %}</td>
+      <td class="num">{{ money(p.annual(p.reclaimable)) }}</td>
+    </tr>
+{% endfor %}
+  </table>
+  </div>
+{% endfor %}
+
+  <h2 id="dormant">Dormant users</h2>
+  <p>Active users holding a reported license who have not logged in for more than {{ a.settings.inactive_days }} days, or who never logged in and were created more than {{ a.settings.never_logged_in_grace_days }} days ago. The same list is in <span class="mono">dormant_users.csv</span>.</p>
+{% if a.dormant_users %}
+  <div class="ev">
+  <table>
+    <tr><th>User</th><th>User license</th><th>Profile</th><th>Last login</th><th>Why</th><th>Frozen</th><th>Other seats</th><th class="num">Per year</th></tr>
+{% for u in a.dormant_users %}
+    <tr>
+      <td>{{ u.username }}{% if u.name %}<br><span class="sub">{{ u.name }}</span>{% endif %}</td>
+      <td>{{ u.user_license }}</td>
+      <td>{{ u.profile }}</td>
+      <td>{{ u.last_login|time }}</td>
+      <td>{{ u.reason }}</td>
+      <td>{{ "yes" if u.frozen else "no" }}</td>
+      <td>{{ u.other_seats|join("; ") }}</td>
+      <td class="num">{{ money(u.annual_cost) }}{% if u.unpriced_seats and u.annual_cost is not none %}<br><span class="sub">+ {{ u.unpriced_seats }} without price</span>{% endif %}</td>
+    </tr>
+{% endfor %}
+  </table>
+  </div>
+{% else %}
+  <div class="ok">No dormant users hold a reported license.</div>
+{% endif %}
+
+  <h2 id="method">Scope and method</h2>
+  <table class="meta">
+    <tr><td>Client</td><td>{{ a.settings.client or "not set" }}</td></tr>
+    <tr><td>Organization</td><td>{{ a.manifest.org.Name }} <span class="mono">({{ a.manifest.org_id }})</span></td></tr>
+    <tr><td>Org type</td><td>{{ a.manifest.org.OrganizationType }}{% if a.manifest.org.IsSandbox %} (sandbox){% endif %}</td></tr>
+    <tr><td>Instance</td><td class="mono">{{ a.manifest.instance_url }}</td></tr>
+    <tr><td>Data collected</td><td>{{ a.manifest.collected_at }} by {{ a.manifest.collecting_user }}</td></tr>
+    <tr><td>Analyzed</td><td>{{ a.analyzed_at }}</td></tr>
+    <tr><td>Dormant after</td><td>{{ a.settings.inactive_days }} days without a login; never logged in after {{ a.settings.never_logged_in_grace_days }} days</td></tr>
+    <tr><td>User types left out</td><td>{{ a.settings.excluded_user_types|join(", ") or "none" }}</td></tr>
+    <tr><td>Users left out</td><td>{{ a.settings.excluded_users|join(", ") or "none" }}</td></tr>
+    <tr><td>Licenses left out</td><td>{{ a.settings.ignore_licenses|join(", ") or "none" }}</td></tr>
+    <tr><td>Currency</td><td>{{ a.settings.currency }}</td></tr>
+    <tr><td>Tool</td><td>sflic {{ a.tool_version }} (Salesforce API v{{ a.manifest.api_version }})</td></tr>
+  </table>
+  <p>License and user data were read once, read-only, through the Salesforce APIs and stored as a timestamped snapshot with a SHA-256 hash for every data file. The analysis runs offline against that snapshot.</p>
+  <h3>Limitations</h3>
+  <ul>
+    <li>Dormancy uses each user's last login date. A user who logs in but does not use a product (for example holds a CPQ seat and never opens CPQ) is not detected.</li>
+    <li>Licenses with no seat count (total 0, or a site-wide managed package) are not listed.</li>
+    <li>Feature licenses set on the user record (Marketing User, Service Cloud User, Knowledge User and similar) are not assessed.</li>
+    <li>Prices are the ones in settings.yaml. Contract terms, minimum quantities and bundled licenses are not known to the tool.</li>
+  </ul>
+
+  <h2 id="evidence">Evidence appendix</h2>
+{% if a.integrity_issues %}
+  <div class="warn"><strong>Snapshot integrity check failed.</strong>
+    <ul>
+{% for issue in a.integrity_issues %}
+      <li>{{ issue }}</li>
+{% endfor %}
+    </ul>
+  </div>
+{% else %}
+  <div class="ok">All data files matched their SHA-256 hashes in the manifest when this report was produced ({{ a.analyzed_at }}).</div>
+{% endif %}
+  <table class="meta">
+    <tr><td>Snapshot</td><td class="mono">{{ a.snapshot_dir }}</td></tr>
+    <tr><td>Manifest SHA-256</td><td class="mono">{{ a.manifest_sha256 }}</td></tr>
+  </table>
+  <h3>Data files</h3>
+  <table>
+    <tr><th>File</th><th>SHA-256</th><th>Used for</th></tr>
+{% for file, sha in a.manifest.files.items() %}
+    <tr><td class="mono">{{ file }}</td><td class="mono">{{ sha }}</td><td>{{ file_use.get(file, "") }}</td></tr>
+{% endfor %}
+  </table>
+
+  <footer>Generated by sflic {{ a.tool_version }} on {{ a.analyzed_at }}. Read-only review; no changes were made to the Salesforce org.</footer>
+</main>
+</body>
+</html>

@@ -1,0 +1,52 @@
+[project]
+name = "sflic"
+version = "0.1.0"
+description = "Read-only Salesforce license waste finder"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Grzegorz Porwisz, Alchemy Consulting" }]
+keywords = ["salesforce", "licenses", "license-management", "cost-optimization", "cli"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: System Administrators",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+]
+requires-python = ">=3.12"
+dependencies = [
+    "typer>=0.12",
+    "jinja2>=3.1",
+    "pyyaml>=6.0",
+    "pydantic>=2.7",
+]
+
+[project.urls]
+Repository = "https://github.com/porwiszek/sfdc_license_usage"
+Issues = "https://github.com/porwiszek/sfdc_license_usage/issues"
+
+[project.scripts]
+sflic = "sflic.cli:app"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["sflic"]
+
+[dependency-groups]
+dev = ["pytest>=8", "ruff>=0.6"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = ["*.md"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
