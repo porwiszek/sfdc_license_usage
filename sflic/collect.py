@@ -1,8 +1,8 @@
 """Run the declared queries against the org and write a snapshot.
 
-Copied from sfgrc 0.1.0 (collect.py). SfCliClient and the helpers above collect_data
-are unchanged, so a fix made there can be carried over as-is. The difference: sflic
-has no check library, so collect() takes the data declaration directly.
+SfCliClient and the helpers above collect_data are shared with another project and
+kept identical, so a fix can be carried between them as-is. collect() itself takes
+the data declaration directly.
 
 Read-only: this module only issues SOQL / Tooling API queries and Metadata API
 retrieves (`sf project retrieve start` into a temporary directory).

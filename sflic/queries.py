@@ -1,13 +1,11 @@
 """What sflic reads from the org. Every query is a read-only SELECT.
 
-Verification status (see CLAUDE.md, "Don't guess Salesforce API names"):
+Verification status (only add object or field names that have been run on an org):
 
-- frozen_users and the User / Profile.UserLicense fields in active_users are used by
-  sfgrc and were verified there on Developer Edition orgs.
 - All seven queries (active_users, frozen_users, user_licenses,
   permission_set_licenses, psl_assignments, package_licenses,
-  package_license_assignments) ran without errors on a Trailhead playground
-  (Developer Edition) org, API v68.0, on 2026-11-23. package_license_assignments returned 0 rows there,
+  package_license_assignments) ran without errors on Developer Edition orgs,
+  API v68.0, on 2026-11-23. package_license_assignments returned 0 rows there,
   so its fields are accepted by the API but no data has been seen yet.
 - A query that fails is still recorded in the snapshot manifest and its section of
   the report says "not collected", so one wrong name does not break the run.
