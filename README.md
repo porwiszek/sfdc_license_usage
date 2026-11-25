@@ -1,5 +1,9 @@
 # sflic — Salesforce license waste finder
 
+> **Early release:** tested on a small number of orgs; feedback welcome.
+> Please [open an issue](https://github.com/porwiszek/sfdc_license_usage/issues) if
+> something looks wrong on your org.
+
 A local Python CLI that reads a Salesforce org's license data, read-only, and reports
 where license money is wasted:
 
@@ -97,6 +101,13 @@ and the rest of the run continues. Please open an issue with the error message.
   users rather than a wrong number. Raise the limit in the sf CLI for such orgs.
 - Prices are whatever is in `settings.yaml`. Contract minimums and bundles are not
   known to the tool.
+
+## Disclaimer
+
+Results are estimates to help decide where to look, not a final verdict. A dormant user
+may be a service account, someone on leave or a seat kept on purpose. Check each user
+with the org's admin before deactivating anyone or changing a contract. The software
+is provided as is, without warranty (see [LICENSE](LICENSE)).
 
 ## Development
 

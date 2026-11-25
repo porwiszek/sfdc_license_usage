@@ -26,6 +26,12 @@ def test_report_contents(snapshot_dir, settings):
     assert "Not collected" not in html
 
 
+def test_report_says_results_must_be_checked_before_acting(snapshot_dir, settings):
+    html = render_report(analyze(snapshot_dir, settings))
+    assert "Check each user with the org's admin before deactivating" in html
+    assert "estimates" in html
+
+
 def test_report_escapes_org_data(tmp_path, settings):
     from conftest import ORG_DATA, make_snapshot
 
